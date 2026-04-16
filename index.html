@@ -52,15 +52,17 @@
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         // ⚠️ আপনার ফায়ারবেস কনফিগারেশন এখানে দিন
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_ID",
-            appId: "YOUR_APP_ID"
-        };
-
+        
+const firebaseConfig = {
+  apiKey: "AIzaSyA7JriiGg8ebYIhasc94vZf7y0LEhdLJ0Y",
+  authDomain: "tcoin-9800d.firebaseapp.com",
+  databaseURL: "https://tcoin-9800d-default-rtdb.firebaseio.com",
+  projectId: "tcoin-9800d",
+  storageBucket: "tcoin-9800d.firebasestorage.app",
+  messagingSenderId: "473266283562",
+  appId: "1:473266283562:web:c91bfe33004e63cf074f53",
+  measurementId: "G-280N3BRSQT"
+};
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
