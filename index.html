@@ -1,118 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earn Master - User App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background-color: #008000; color: white; font-family: sans-serif; }
-        .btn-red { background-color: #ff0000; transition: 0.3s; }
-        .btn-red:hover { background-color: #cc0000; }
-        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
-        .nav-item { cursor: pointer; opacity: 0.7; transition: 0.3s; }
-        .nav-item:hover { opacity: 1; color: #ff0000; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCOIN USER</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+body{background:#008000;color:white;}
+.card{background:rgba(255,255,255,0.1);padding:12px;border-radius:10px;margin-bottom:10px;}
+</style>
 </head>
-<body class="pb-20">
 
-    <header class="p-4 flex justify-between items-center sticky top-0 bg-green-900 z-50">
-        <h1 class="text-xl font-bold tracking-wider">EARN<span class="text-red-500">PRO</span></h1>
-        <div class="glass-card px-4 py-1 flex items-center gap-2">
-            <i class="fas fa-wallet text-yellow-400"></i>
-            <span id="balance" class="font-bold text-sm">0.00</span>
-        </div>
-    </header>
+<body>
 
-    <main id="app-content" class="p-4 min-h-screen">
-        </main>
+<header class="p-4 flex justify-between">
+<h1>TCOIN</h1>
+<button onclick="googleLogin()" class="bg-white text-green-900 px-3 py-1 rounded">Login</button>
+</header>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-white/10 flex justify-around p-3 z-50">
-        <div onclick="render('video')" class="nav-item text-center">
-            <i class="fas fa-play-circle text-xl"></i>
-            <p class="text-[10px] uppercase mt-1">Video</p>
-        </div>
-        <div onclick="render('ads')" class="nav-item text-center">
-            <i class="fas fa-ad text-xl"></i>
-            <p class="text-[10px] uppercase mt-1">Ads</p>
-        </div>
-        <div onclick="render('product')" class="nav-item text-center">
-            <i class="fas fa-shopping-bag text-xl"></i>
-            <p class="text-[10px] uppercase mt-1">Shop</p>
-        </div>
-        <div onclick="render('profile')" class="nav-item text-center">
-            <i class="fas fa-user-circle text-xl"></i>
-            <p class="text-[10px] uppercase mt-1">Profile</p>
-        </div>
-    </nav>
+<div class="p-4">
+<div id="balanceBox">Balance: 0</div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+<main id="app" class="p-4"></main>
 
-        // ⚠️ আপনার ফায়ারবেস কনফিগারেশন এখানে দিন
-        
+<nav class="fixed bottom-0 w-full flex justify-around bg-black p-2 text-xs">
+<button onclick="load('videos')">Video</button>
+<button onclick="load('ads')">Ads</button>
+<button onclick="load('apps')">Apps</button>
+<button onclick="load('profile')">Profile</button>
+</nav>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, increment, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyA7JriiGg8ebYIhasc94vZf7y0LEhdLJ0Y",
-  authDomain: "tcoin-9800d.firebaseapp.com",
-  databaseURL: "https://tcoin-9800d-default-rtdb.firebaseio.com",
-  projectId: "tcoin-9800d",
-  storageBucket: "tcoin-9800d.firebasestorage.app",
-  messagingSenderId: "473266283562",
-  appId: "1:473266283562:web:c91bfe33004e63cf074f53",
-  measurementId: "G-280N3BRSQT"
+apiKey:"AIzaSyA7JriiGg8ebYIhasc94vZf7y0LEhdLJ0Y",
+authDomain:"tcoin-9800d.firebaseapp.com",
+projectId:"tcoin-9800d"
 };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
 
-        // Global function for navigation
-        window.render = async (page) => {
-            const root = document.getElementById('app-content');
-            root.innerHTML = `<div class="flex justify-center mt-20"><div class="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div></div>`;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-            try {
-                if (page === 'video') {
-                    const snap = await getDocs(query(collection(db, "videos"), orderBy("createdAt", "desc")));
-                    let html = `<h2 class="text-lg font-bold mb-4">🎬 Watch Videos</h2>`;
-                    snap.forEach(doc => {
-                        const data = doc.data();
-                        html += `
-                        <div class="glass-card p-3 mb-4 flex gap-4 items-center">
-                            <img src="${data.thumbnail}" class="w-24 h-16 rounded object-cover bg-gray-800">
-                            <div class="flex-1">
-                                <h3 class="text-sm font-semibold truncate">${data.title}</h3>
-                                <button onclick="window.open('${data.url}')" class="btn-red mt-2 px-4 py-1 rounded text-xs font-bold uppercase">Watch</button>
-                            </div>
-                        </div>`;
-                    });
-                    root.innerHTML = snap.empty ? `<p class="text-center mt-10">No videos available</p>` : html;
-                } 
-                
-                else if (page === 'profile') {
-                    root.innerHTML = `
-                        <div class="glass-card p-8 text-center mt-5">
-                            <div class="w-20 h-20 bg-red-600 rounded-full mx-auto flex items-center justify-center text-3xl font-bold mb-4">U</div>
-                            <h2 class="text-xl font-bold">User Account</h2>
-                            <p class="text-green-200 text-sm">Status: Active</p>
-                            <div class="mt-8 space-y-3">
-                                <button class="w-full bg-white text-green-900 font-bold py-3 rounded-xl">Withdraw Balance</button>
-                                <button class="w-full border border-white/30 py-3 rounded-xl">Transaction History</button>
-                                <button class="w-full text-red-400 mt-4 underline">Logout</button>
-                            </div>
-                        </div>`;
-                }
+let currentUser = null;
 
-                else {
-                    root.innerHTML = `<div class="text-center mt-20"><i class="fas fa-clock text-4xl mb-4 opacity-30"></i><p>Coming Soon...</p></div>`;
-                }
-            } catch (err) {
-                root.innerHTML = `<p class="text-center text-red-300">Error: ${err.message}</p>`;
-            }
-        };
+/* ---------------- LOGIN ---------------- */
+window.googleLogin = async () => {
+const provider = new GoogleAuthProvider();
+const result = await signInWithPopup(auth, provider);
 
-        // Initial Load
-        render('video');
-    </script>
+currentUser = result.user;
+
+const ref = doc(db,"users",currentUser.uid);
+const snap = await getDoc(ref);
+
+if(!snap.exists()){
+await setDoc(ref,{
+name:currentUser.displayName,
+email:currentUser.email,
+balance:0,
+refCode:currentUser.uid.slice(0,6)
+});
+}
+
+loadBalance();
+alert("Login Success");
+};
+
+/* ---------------- BALANCE ---------------- */
+async function loadBalance(){
+if(!currentUser) return;
+const snap = await getDoc(doc(db,"users",currentUser.uid));
+document.getElementById("balanceBox").innerText =
+"Balance: " + (snap.data().balance || 0);
+}
+
+/* ---------------- EARN ---------------- */
+window.watchItem = async (url,type)=>{
+if(!currentUser) return alert("Login first");
+
+window.open(url);
+
+let reward = 5;
+if(type==="ads") reward = 10;
+
+await updateDoc(doc(db,"users",currentUser.uid),{
+balance:increment(reward)
+});
+
+await addDoc(collection(db,"earn_logs"),{
+uid:currentUser.uid,
+type,
+reward,
+time:Date.now()
+});
+
+loadBalance();
+alert("+"+reward+" coins");
+};
+
+/* ---------------- WITHDRAW ---------------- */
+window.withdraw = async ()=>{
+if(!currentUser) return;
+
+const phone = prompt("Phone");
+const amount = Number(prompt("Amount"));
+
+await addDoc(collection(db,"withdraw_requests"),{
+uid:currentUser.uid,
+phone,
+amount,
+status:"pending"
+});
+
+alert("Withdraw sent");
+};
+
+/* ---------------- LOAD ---------------- */
+window.load = async (type)=>{
+const appDiv=document.getElementById("app");
+appDiv.innerHTML="Loading...";
+
+if(type==="profile"){
+appDiv.innerHTML=`
+<div class="card">
+<button onclick="withdraw()" class="bg-red-600 px-3 py-2 rounded">Withdraw</button>
+</div>`;
+return;
+}
+
+const snap = await getDocs(collection(db,type));
+let html="";
+
+snap.forEach(d=>{
+const data=d.data();
+
+html+=`
+<div class="card">
+<h3>${data.title}</h3>
+<button onclick="watchItem('${data.url}','${type}')"
+class="bg-red-600 px-2 py-1 rounded text-xs">
+WATCH & EARN
+</button>
+</div>`;
+});
+
+appDiv.innerHTML=html;
+};
+
+window.onload=()=>load("videos");
+</script>
+
 </body>
 </html>
