@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+
+    <div id="login-screen" class="max-w-md mx-auto mt-20 p-6 bg-gray-800 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
+        <input id="email" type="email" placeholder="Email" class="w-full p-2 mb-4 rounded bg-gray-700">
+        <input id="pass" type="password" placeholder="Password" class="w-full p-2 mb-4 rounded bg-gray-700">
+        <button id="btnLogin" class="w-full bg-blue-600 p-2 rounded">Access Dashboard</button>
+    </div>
+
+    <div id="admin-dashboard" class="hidden">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+            <button class="bg-red-600 px-4 py-1 rounded">Logout</button>
+        </header>
+
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-gray-800 p-4 rounded text-center">
+                <p class="text-gray-400">Total Users</p>
+                <h3 id="statUsers" class="text-2xl font-bold">0</h3>
+            </div>
+            <div class="bg-gray-800 p-4 rounded text-center">
+                <p class="text-gray-400">Total Videos</p>
+                <h3 id="statVideos" class="text-2xl font-bold">0</h3>
+            </div>
+        </div>
+
+        <section class="bg-gray-800 p-4 rounded">
+            <h3 class="text-lg font-bold mb-4">Add New Video</h3>
+            <input id="vTitle" type="text" placeholder="Video Title" class="w-full p-2 mb-2 bg-gray-700 rounded text-sm">
+            <input id="vUrl" type="text" placeholder="Video Link (YouTube/Direct)" class="w-full p-2 mb-2 bg-gray-700 rounded text-sm">
+            <input id="vThumb" type="text" placeholder="Thumbnail Image URL" class="w-full p-2 mb-4 bg-gray-700 rounded text-sm">
+            <button id="btnUpload" class="bg-green-600 w-full py-2 rounded">Upload Content</button>
+        </section>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        const firebaseConfig = { /* SAME CONFIG AS USER APP */ };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ADMIN_EMAIL = "laxmimoyc14@gmail.com";
+
+        document.getElementById('btnLogin').onclick = async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+
+            if(email !== ADMIN_EMAIL) {
+                alert("Unauthorized Access");
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+            } catch (e) { alert(e.message); }
+        };
+
+        document.getElementById('btnUpload').onclick = async () => {
+            const title = document.getElementById('vTitle').value;
+            const url = document.getElementById('vUrl').value;
+            const thumb = document.getElementById('vThumb').value;
+
+            await addDoc(collection(db, "videos"), {
+                title, url, thumbnail: thumb, createdAt: new Date()
+            });
+            alert("Video Added Successfully!");
+        };
+    </script>
+</body>
+</html>
